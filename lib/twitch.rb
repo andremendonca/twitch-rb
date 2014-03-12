@@ -62,6 +62,15 @@ class Twitch
 		get(url)
 	end
 
+  # Subscription
+
+	def getChannelSubscription(user, channel)
+		return false if !@access_token
+		path = "/users/#{user}/subscriptions/#{channel}?oauth_token=#{@access_token}"
+		url = @base_url + path;
+		get(url)
+	end
+
 	# Channel
 
 	def getChannel(channel)
@@ -77,9 +86,9 @@ class Twitch
 		get(url)
 	end
 
-	def editChannel(status, game)
+	def editChannel(channel, status, game)
 		return false if !@access_token
-		path = "/channels/dustinlakin/?oauth_token=#{@access_token}"
+		path = "/channels/#{channel}/?oauth_token=#{@access_token}"
 		url = @base_url + path
 		data = {
 			:channel =>{
