@@ -2,221 +2,204 @@ require "curb"
 require "json"
 
 class Twitch
-	def initialize(options = {})
-		@client_id = options[:client_id] || nil
-		@secret_key = options[:secret_key] || nil
-		@redirect_uri = options[:redirect_uri] || nil
-		@scope = options[:scope] || nil
-		@access_token = options[:access_token] || nil
+  def initialize(options = {})
+    @client_id = options[:client_id] || nil
+    @secret_key = options[:secret_key] || nil
+    @redirect_uri = options[:redirect_uri] || nil
+    @scope = options[:scope] || nil
+    @access_token = options[:access_token] || nil
 
-		@base_url = "https://api.twitch.tv/kraken"
-	end
+    @base_url = "https://api.twitch.tv/kraken"
+  end
 
-	public
+  public
 
-	def getLink
-		scope = ""
-		@scope.each { |s| scope += s + '+' }
-		link = "https://api.twitch.tv/kraken/oauth2/authorize?response_type=code&client_id=#{@client_id}&redirect_uri=#{@redirect_uri}&scope=#{scope}"
-	end
+  def getLink
+    scope = ""
+    @scope.each { |s| scope += s + '+' }
+    "https://api.twitch.tv/kraken/oauth2/authorize?response_type=code&client_id=#{@client_id}&redirect_uri=#{@redirect_uri}&scope=#{scope}"
+  end
 
-	def auth(code)
-		path = "/oauth2/token"
-		url = @base_url + path
-		post(url, {
-			:client_id => @client_id,
-			:client_secret => @secret_key,
-			:grant_type => "authorization_code",
-			:redirect_uri => @redirect_uri,
-			:code => code
-		})
-	end
+  def auth(code)
+    path = "/oauth2/token"
+    url = @base_url + path
+    post(url, {
+      :client_id => @client_id,
+      :client_secret => @secret_key,
+      :grant_type => "authorization_code",
+      :redirect_uri => @redirect_uri,
+      :code => code
+    })
+  end
 
-	# User
+  # User
 
-	def getUser(user)
-		path = "/users/"
-		url = @base_url + path + user;
-		get(url)
-	end
+  def getUser(user)
+    path = "/users/" + user
+    get(url path)
+  end
 
-	def getYourUser
-		return false if !@access_token
-		path = "/user?oauth_token=#{@access_token}"
-		url = @base_url + path
-		get(url)
-	end
+  def getYourUser
+    return false if !@access_token
+    path = "/user?oauth_token=#{@access_token}"
+    get(url path)
+  end
 
-	# Teams
+  # Teams
 
-	def getTeams
-		path = "/teams/"
-		url = @base_url + path;
-		get(url)
-	end
+  def getTeams
+    path = "/teams/"
+    get(url path)
+  end
 
 
-	def getTeam(team_id)
-		path = "/teams/"
-		url = @base_url + path + team_id;
-		get(url)
-	end
+  def getTeam(team_id)
+    path = "/teams/" + team_id
+    get(url path)
+  end
 
   # Subscription
 
-	def getChannelSubscription(user, channel)
-		return false if !@access_token
-		path = "/users/#{user}/subscriptions/#{channel}?oauth_token=#{@access_token}"
-		url = @base_url + path;
-		get(url)
-	end
+  def getChannelSubscription(user, channel)
+    return false if !@access_token
+    path = "/users/#{user}/subscriptions/#{channel}?oauth_token=#{@access_token}"
+    get(url path)
+  end
 
-	# Channel
+  # Channel
 
-	def getChannel(channel)
-		path = "/channels/"
-		url = @base_url + path + channel;
-		get(url)
-	end
+  def getChannel(channel)
+    path = "/channels/" + channel
+    get(url path)
+  end
 
-	def getYourChannel
-		return false if !@access_token
-		path = "/channel?oauth_token=#{@access_token}"
-		url = @base_url + path;
-		get(url)
-	end
+  def getYourChannel
+    return false if !@access_token
+    path = "/channel?oauth_token=#{@access_token}"
+    get(url path)
+  end
 
-	def editChannel(channel, status, game)
-		return false if !@access_token
-		path = "/channels/#{channel}/?oauth_token=#{@access_token}"
-		url = @base_url + path
-		data = {
-			:channel =>{
-				:game => game,
-				:status => status
-			}
-		}
-		put(url, data)
-	end
+  def editChannel(channel, status, game)
+    return false if !@access_token
+    path = "/channels/#{channel}/?oauth_token=#{@access_token}"
+    data = {
+      :channel =>{
+        :game => game,
+        :status => status
+      }
+    }
+    put(url path, data)
+  end
 
-	def runCommercial(channel, length = 30)
-		return false if !@access_token
-		path = "/channels/#{channel}/commercial?oauth_token=#{@access_token}"
-		url = @base_url + path
-		post(url, {
-			:length => length
-		})
-	end
+  def runCommercial(channel, length = 30)
+    return false if !@access_token
+    path = "/channels/#{channel}/commercial?oauth_token=#{@access_token}"
+    post(url path, {
+      :length => length
+    })
+  end
 
-	# Streams
+  # Streams
 
-	def getStream(stream_name)
-		path = "/stream/#{stream_name}"
-		url = @base_url + path;
-		get(url)
-	end
+  def getStream(stream_name)
+    path = "/stream/#{stream_name}"
+    get(url path)
+  end
 
-	def getStream(stream_name)
-		path = "/streams/#{stream_name}"
-		url = @base_url + path;
-		get(url)
-	end
+  def getStream(stream_name)
+    path = "/streams/#{stream_name}"
+    get(url path)
+  end
 
-	def getStreams(options = {})
-		query = buildQueryString(options)
-		path = "/streams"
-		url =  @base_url + path + query
-		get(url)
-	end
+  def getStreams(options = {})
+    query = buildQueryString(options)
+    path = "/streams" + query
+    get(url path)
+  end
 
-	def getFeaturedStreams(options = {})
-		query = buildQueryString(options)
-		path = "/streams/featured"
-		url = @base_url + path + query
-		get(url)
-	end
+  def getFeaturedStreams(options = {})
+    query = buildQueryString(options)
+    path = "/streams/featured" + query
+    get(url path)
+  end
 
-	def getSummeraizedStreams(options = {})
-		query = buildQueryString(options)
-		path = "/streams/summary"
-		url = @base_url + path + query
-		get(url)
-	end
+  def getSummeraizedStreams(options = {})
+    query = buildQueryString(options)
+    path = "/streams/summary" + query
+    get(url path)
+  end
 
-	def getYourFollowedStreams
-		path = "/streams/followed?oauth_token=#{@access_token}"
-		url = @base_url + path
-		get(url)
-	end
+  def getYourFollowedStreams
+    path = "/streams/followed?oauth_token=#{@access_token}"
+    get(url path)
+  end
 
-	#Games
+  #Games
 
-	def getTopGames(options = {})
-		query = buildQueryString(options)
-		path = "/games/top"
-		url = @base_url + path + query
-		get(url)
-	end
+  def getTopGames(options = {})
+    query = buildQueryString(options)
+    path = "/games/top" + query
+    get(url path)
+  end
 
-	#Search
+  #Search
 
-	def searchStreams(options = {})
-		query = buildQueryString(options)
-		path = "/search/streams"
-		url = @base_url + path + query
-		get(url)
-	end
+  def searchStreams(options = {})
+    query = buildQueryString(options)
+    path = "/search/streams" + query
+    get(url path)
+  end
 
-	def searchGames(options = {})
-		query = buildQueryString(options)
-		path = "/search/games"
-		url = @base_url + path + query
-		get(url)
-	end
+  def searchGames(options = {})
+    query = buildQueryString(options)
+    path = "/search/games" + query
+    get(ur path)
+  end
 
-	# Videos
+  # Videos
 
-	def getChannelVideos(channel, options = {})
-		query = buildQueryString(options)
-		path = "/channels/#{channel}/videos"
-		url = @base_url + path + query
-		get(url)
-	end
+  def getChannelVideos(channel, options = {})
+    query = buildQueryString(options)
+    path = "/channels/#{channel}/videos" + query
+    get(url path)
+  end
 
-	def getVideo(video_id)
-		path = "/videos/#{video_id}/"
-		url = @base_url + path
-		get(url)
-	end
+  def getVideo(video_id)
+    path = "/videos/#{video_id}/"
+    get(url path)
+  end
 
+  private
 
-	private
+  def url (path)
+    @base_url + path
+  end
 
-	def buildQueryString(options)
-		query = "?"
-		options.each do |key, value|
-			query += "#{key}=#{value.to_s.gsub(" ", "+")}&"
-		end
-		query = query[0...-1]
-	end
+  def buildQueryString(options)
+    query = "?"
+    options.each do |key, value|
+      query += "#{key}=#{value.to_s.gsub(" ", "+")}&"
+    end
+    query = query[0...-1]
+  end
 
-	def post(url, data)
-		JSON.parse(Curl.post(url, data).body_str)
-		c = Curl.post(url, data)
-		{:body => JSON.parse(c.body_str), :response => c.response_code}
-	end
+  def post(url, data)
+    JSON.parse(Curl.post(url, data).body_str)
+    resp = Curl.post(url, data)
+    {:body => JSON.parse(resp.body_str), :response => resp.response_code}
+  end
 
-	def get(url)
-		c = Curl.get(url)
-		{:body => JSON.parse(c.body_str), :response => c.response_code}
-	end
+  def get(url)
+    resp = Curl.get url
+    {:body => JSON.parse(resp.body_str), :response => resp.response_code}
+  end
 
-	def put(url, data)
-		c = Curl.put(url,data.to_json) do |curl|
-			curl.headers['Accept'] = 'application/json'
-			curl.headers['Content-Type'] = 'application/json'
-			curl.headers['Api-Version'] = '2.2'
-			end
-		{:body => JSON.parse(c.body_str), :response => c.response_code}
-	end
+  def put(url, data)
+    resp = Curl.put(url,data.to_json) do |curl|
+      curl.headers['Accept'] = 'application/json'
+      curl.headers['Content-Type'] = 'application/json'
+      curl.headers['Api-Version'] = '2.2'
+    end
+    {:body => JSON.parse(resp.body_str), :response => resp.response_code}
+  end
 end
