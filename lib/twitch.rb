@@ -171,8 +171,26 @@ class Twitch
 
   private
 
+  API_ERRORS = {
+    502 => '502 Bad Gateway',
+    503 => '503 Service Unavailable',
+    401 => '503 Invalid Token'
+  }
+
   def url (path)
     @base_url + path
+  end
+
+  def respond resp
+    API_ERRORS.values.each do |err|
+      if resp.body_str.include? err
+        error = API_ERRORS.index err
+        errorMessage = err
+      end
+    end
+
+    return {:body => errorMessage, :response => error} if defined? error
+    {:body => JSON.parse(resp.body_str), :response => resp.response_code}
   end
 
   def buildQueryString(options)
@@ -186,12 +204,12 @@ class Twitch
   def post(url, data)
     JSON.parse(Curl.post(url, data).body_str)
     resp = Curl.post(url, data)
-    {:body => JSON.parse(resp.body_str), :response => resp.response_code}
+    respond resp
   end
 
   def get(url)
     resp = Curl.get url
-    {:body => JSON.parse(resp.body_str), :response => resp.response_code}
+    respond resp
   end
 
   def put(url, data)
@@ -200,6 +218,6 @@ class Twitch
       curl.headers['Content-Type'] = 'application/json'
       curl.headers['Api-Version'] = '2.2'
     end
-    {:body => JSON.parse(resp.body_str), :response => resp.response_code}
+    respond resp
   end
 end
